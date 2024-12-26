@@ -26,7 +26,13 @@ export const getAccessToken = async (req: express.Request, res: express.Response
 
         res
             .status(200)
-            .cookie("token", response.data.access_token, { maxAge: 58*60*1000, httpOnly: true })
+            .cookie("token", response.data.access_token, { 
+                maxAge: 58*60*1000, 
+                httpOnly: true,
+                secure: true,
+                sameSite: 'none',
+                domain: '.vercel.app' // This allows cookies across subdomains
+            })
             .json({
                 message: "token recieved",
             });
