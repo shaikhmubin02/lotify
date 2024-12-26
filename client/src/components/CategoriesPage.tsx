@@ -15,14 +15,18 @@ const CategoriesPage = () => {
     const getResponse = async () => {
         setLoading(true);
         try {
-            const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1//albums/${id}`, {}, { withCredentials: true });
+            // remove the double slash ane encode the category id
+            const encodedId = encodeURIComponent(id || '');
+            const res = await axios.post(
+                `${import.meta.env.VITE_API_URL}/api/v1/albums/${encodedId}`, 
+                {}, 
+                { withCredentials: true }
+            );
             setData(res.data.data);
-            setLoading(false);
         } catch (error) {
             console.log(error);
             toast.error("Something went wrong");
-           
-        }finally{
+        } finally {
             setLoading(false);
         }
     }

@@ -246,29 +246,37 @@ export const getTracksOfAlbum = async (req: express.Request, res: express.Respon
 export const getAlbumOfCategory = async (req: express.Request, res: express.Response): Promise<void> => {
     try {
         const token = req.cookies?.token;
-        const category  = req.params.category as string;
+        const category = decodeURIComponent(req.params.category);
 
-        if (!token) throw new Error("getAlbumOfCatgory err : token is missing");
+        if (!token) {
+            res.status(401).json({ message: "No token found" });
+            return;
+        }
 
-        if (!category) throw new Error("getAlbumOfCatgory err : query parameter is missing");
+        if (!category) {
+            res.status(400).json({ message: "Category parameter is required" });
+            return;
+        }
 
-        const response = await axios.get(`https://api.spotify.com/v1/search?q=${category}&type=album&limit=30`,
+        const response = await axios.get(
+            `https://api.spotify.com/v1/search?q=${encodeURIComponent(category)}&type=album&limit=30`,
             {
                 headers: sendHeaders(token)
             }
         );
 
-        const albums = await response.data.albums.items;
+        const albums = response.data.albums.items;
+        if (!albums) {
+            res.status(404).json({ message: "No albums found" });
+            return;
+        }
 
-        if (!albums) throw new Error("getAlbumOfCatgory err : couldn't get albums");
-
-        res
-            .status(200)
-            .json({ message: "Albums recieved", data: albums });
+        res.status(200).json({ message: "Albums received", data: albums });
     } catch (error) {
-        console.log("getAlbumOfCatgory err", error);
-        res
-            .status(500)
-            .json({ message: "getAlbumOfCatgory error", error: error });
+        console.error("getAlbumOfCategory err", error);
+        res.status(500).json({ 
+            message: "Internal server error", 
+            error: error instanceof Error ? error.message : 'Unknown error'
+        });
     }
 }
